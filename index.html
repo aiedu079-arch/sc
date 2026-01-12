@@ -23,7 +23,6 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
         }
 
         #quiz-container {
@@ -35,7 +34,6 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
             text-align: center;
             border: 6px solid #ffe0b2;
-            position: relative;
         }
 
         /* 첫 화면 스타일 */
@@ -45,11 +43,13 @@
             align-items: center;
         }
 
-        .main-icon {
-            font-size: 80px;
+        /* 요청하신 이미지를 넣는 스타일 */
+        .main-img {
+            width: 200px; /* 이미지 너비 조절 */
+            height: auto;
+            border-radius: 20px;
             margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .title {
@@ -57,6 +57,7 @@
             font-weight: 800;
             color: #e65100;
             margin-bottom: 10px;
+            word-break: keep-all;
         }
 
         .subtitle {
@@ -65,7 +66,6 @@
             margin-bottom: 30px;
         }
 
-        /* 버튼 스타일 */
         .btn {
             padding: 15px 40px;
             font-size: 1.2rem;
@@ -86,58 +86,19 @@
         #start-btn:hover { background-color: #fb8c00; transform: translateY(-2px); }
         #start-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* 퀴즈 화면 스타일 */
+        /* 퀴즈 및 결과 화면 (초기엔 숨김) */
         #quiz-screen, #result-screen { display: none; }
 
-        .progress {
-            font-size: 0.9rem;
-            color: #ffa726;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        .question {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 25px;
-            line-height: 1.4;
-            word-break: keep-all;
-        }
-
-        .options {
-            display: grid;
-            gap: 12px;
-        }
-
-        .option-btn {
-            padding: 15px;
-            font-size: 1rem;
-            background: #fff;
-            border: 2px solid #eee;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
+        .progress { font-size: 0.9rem; color: #ffa726; font-weight: bold; margin-bottom: 15px; }
+        .question { font-size: 1.25rem; font-weight: bold; margin-bottom: 25px; line-height: 1.4; word-break: keep-all; }
+        .options { display: grid; gap: 12px; }
+        .option-btn { padding: 15px; font-size: 1rem; background: #fff; border: 2px solid #eee; border-radius: 15px; cursor: pointer; transition: all 0.2s; }
         .option-btn:hover:not([disabled]) { border-color: var(--primary-color); background: #fffde7; }
         .correct { background-color: var(--correct-color) !important; color: white; border-color: #388e3c !important; }
         .wrong { background-color: var(--wrong-color) !important; color: white; border-color: #d32f2f !important; }
 
-        #feedback {
-            margin-top: 20px;
-            font-weight: bold;
-            min-height: 24px;
-        }
-
-        #next-btn {
-            margin-top: 20px;
-            background-color: var(--secondary-color);
-            color: white;
-            display: none;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
+        #feedback { margin-top: 20px; font-weight: bold; min-height: 24px; }
+        #next-btn { margin-top: 20px; background-color: var(--secondary-color); color: white; display: none; margin-left: auto; margin-right: auto; }
         .final-score { font-size: 3rem; font-weight: 800; color: #1976d2; margin: 20px 0; }
     </style>
 </head>
@@ -145,7 +106,8 @@
 
 <div id="quiz-container">
     <div id="start-screen">
-        <div class="main-icon">🔥🧯</div>
+        <img src="https://previews.123rf.com/images/heriyusuf/heriyusuf2106/heriyusuf210607855/170733931-the-cute-fire-character-shoot-with-a-gun-cute-style-design-for-t-shirt-sticker-logo-element.jpg" 
+             alt="불 캐릭터" class="main-img">
         <div class="title">연소와 소화<br>과학 퀴즈 대모험</div>
         <div class="subtitle">6학년 과학 3단원 핵심 정리</div>
         <button id="start-btn" class="btn" onclick="startQuiz()">시작하기 🚀</button>
@@ -168,7 +130,6 @@
 </div>
 
 <script>
-    // PDF 내용을 반영한 퀴즈 데이터 [cite: 36, 12, 39, 41, 47, 48, 50, 91]
     const quizData = [
         { q: "물질이 산소와 만나 빛과 열을 내며 타는 현상을 무엇이라고 하나요?", a: ["소화", "증발", "연소", "용해"], cor: 2 },
         { q: "어떤 물질에 불이 붙어 연소하기 시작하는 온도는?", a: ["비점", "융점", "어는점", "발화점"], cor: 3 },
@@ -195,10 +156,8 @@
         const quiz = quizData[currentIdx];
         document.getElementById('progress').innerText = `질문 ${currentIdx + 1} / ${quizData.length}`;
         document.getElementById('question-text').innerText = quiz.q;
-        
         const container = document.getElementById('options-container');
         container.innerHTML = '';
-        
         quiz.a.forEach((opt, idx) => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
@@ -206,7 +165,6 @@
             btn.onclick = () => checkAnswer(idx);
             container.appendChild(btn);
         });
-
         document.getElementById('feedback').innerText = '';
         document.getElementById('next-btn').style.display = 'none';
     }
@@ -215,9 +173,7 @@
         const correctIdx = quizData[currentIdx].cor;
         const buttons = document.querySelectorAll('.option-btn');
         const feedback = document.getElementById('feedback');
-        
         buttons.forEach(btn => btn.disabled = true);
-
         if (selected === correctIdx) {
             buttons[selected].classList.add('correct');
             feedback.innerText = "🔔 딩동댕! 정답입니다!";
@@ -234,22 +190,15 @@
 
     function nextQuestion() {
         currentIdx++;
-        if (currentIdx < quizData.length) {
-            loadQuestion();
-        } else {
-            showResult();
-        }
+        if (currentIdx < quizData.length) { loadQuestion(); } 
+        else { showResult(); }
     }
 
     function showResult() {
         document.getElementById('quiz-screen').style.display = 'none';
         document.getElementById('result-screen').style.display = 'block';
         document.getElementById('score-text').innerText = (score * 10) + "점";
-        
-        let msg = "";
-        if(score >= 9) msg = "당신은 완벽한 소방관 지망생! 👩‍🚒";
-        else if(score >= 7) msg = "와우! 과학 실력이 대단해요! 👍";
-        else msg = "PDF 내용을 조금 더 복습해볼까요? 🌱";
+        let msg = score >= 9 ? "당신은 완벽한 소방관 지망생! 👩‍🚒" : score >= 7 ? "와우! 과학 실력이 대단해요! 👍" : "PDF 내용을 조금 더 복습해볼까요? 🌱";
         document.getElementById('comment-text').innerText = msg;
     }
 </script>
