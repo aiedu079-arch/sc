@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 연소와 소화 퀴즈 대모험</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
+
+        :root {
+            --primary-color: #ff9800;
+            --secondary-color: #2196f3;
+            --correct-color: #4caf50;
+            --wrong-color: #f44336;
+            --bg-color: #fff9f0;
+        }
+
+        body {
+            font-family: 'Nanum Gothic', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #quiz-container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            padding: 40px 20px;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 6px solid #ffe0b2;
+            position: relative;
+        }
+
+        /* 첫 화면 스타일 */
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-family: inherit;
+        }
+
+        #start-btn {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 6px #ef6c00;
+        }
+
+        #start-btn:hover { background-color: #fb8c00; transform: translateY(-2px); }
+        #start-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* 퀴즈 화면 스타일 */
+        #quiz-screen, #result-screen { display: none; }
+
+        .progress {
+            font-size: 0.9rem;
+            color: #ffa726;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .question {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            word-break: keep-all;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 15px;
+            font-size: 1rem;
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover:not([disabled]) { border-color: var(--primary-color); background: #fffde7; }
+        .correct { background-color: var(--correct-color) !important; color: white; border-color: #388e3c !important; }
+        .wrong { background-color: var(--wrong-color) !important; color: white; border-color: #d32f2f !important; }
+
+        #feedback {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+
+        #next-btn {
+            margin-top: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .final-score { font-size: 3rem; font-weight: 800; color: #1976d2; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="start-screen">
+        <div class="main-icon">🔥🧯</div>
+        <div class="title">연소와 소화<br>과학 퀴즈 대모험</div>
+        <div class="subtitle">6학년 과학 3단원 핵심 정리</div>
+        <button id="start-btn" class="btn" onclick="startQuiz()">시작하기 🚀</button>
+    </div>
+
+    <div id="quiz-screen">
+        <div class="progress" id="progress">질문 1 / 10</div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options-container"></div>
+        <div id="feedback"></div>
+        <button id="next-btn" class="btn" onclick="nextQuestion()">다음 문제 👉</button>
+    </div>
+
+    <div id="result-screen">
+        <div class="title">🎉 퀴즈 끝! 🎉</div>
+        <div class="final-score" id="score-text">0점</div>
+        <div id="comment-text" style="margin-bottom: 30px;"></div>
+        <button class="btn" style="background-color: #78909c; color: white;" onclick="location.reload()">다시 하기 🔄</button>
+    </div>
+</div>
+
+<script>
+    // PDF 내용을 반영한 퀴즈 데이터 [cite: 36, 12, 39, 41, 47, 48, 50, 91]
+    const quizData = [
+        { q: "물질이 산소와 만나 빛과 열을 내며 타는 현상을 무엇이라고 하나요?", a: ["소화", "증발", "연소", "용해"], cor: 2 },
+        { q: "어떤 물질에 불이 붙어 연소하기 시작하는 온도는?", a: ["비점", "융점", "어는점", "발화점"], cor: 3 },
+        { q: "양초가 타면서 생기는 물질 중, 석회수를 뿌옇게 흐리게 만드는 것은?", a: ["이산화탄소", "산소", "수소", "질소"], cor: 0 },
+        { q: "연소 후에 생성되는 액체 물질로, 푸른색 염화 코발트 종이를 붉게 변화시키는 것은?", a: ["기름", "물", "알코올", "식초"], cor: 1 },
+        { q: "촛불을 아크릴 통으로 덮으면 불이 꺼집니다. 어떤 소화 조건인가요?", a: ["탈 물질 제거", "산소 차단", "온도 낮추기", "습도 높이기"], cor: 1 },
+        { q: "가스레인지의 밸브를 잠그는 것은 어떤 소화 방법인가요?", a: ["탈 물질 제거", "산소 차단", "온도 낮추기", "압력 낮추기"], cor: 0 },
+        { q: "물 뿌리기는 소화의 조건 중 무엇에 해당하나요?", a: ["산소 차단", "탈 물질 제거", "발화점 아래로 온도 낮추기", "산소 공급"], cor: 2 },
+        { q: "전기 화재가 났을 때 가장 주의해야 할 점은?", a: ["바람을 등진다", "물을 뿌리면 감전 위험이 있다", "소화기를 사용하지 않는다", "문을 모두 연다"], cor: 1 },
+        { q: "불이 났을 때 대피 방법으로 옳은 것은?", a: ["승강기를 이용한다", "낮은 자세로 계단을 이용한다", "옷장에 숨는다", "문을 열어둔다"], cor: 1 },
+        { q: "소화기를 사용할 때 호스는 어디를 향해야 하나요?", a: ["하늘 위", "바람이 불어오는 방향", "불이 난 곳", "자기 자신"], cor: 2 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+
+    function startQuiz() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const quiz = quizData[currentIdx];
+        document.getElementById('progress').innerText = `질문 ${currentIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerText = quiz.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        quiz.a.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(idx);
+            container.appendChild(btn);
+        });
+
+        document.getElementById('feedback').innerText = '';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(selected) {
+        const correctIdx = quizData[currentIdx].cor;
+        const buttons = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback');
+        
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selected === correctIdx) {
+            buttons[selected].classList.add('correct');
+            feedback.innerText = "🔔 딩동댕! 정답입니다!";
+            feedback.style.color = "var(--correct-color)";
+            score++;
+        } else {
+            buttons[selected].classList.add('wrong');
+            buttons[correctIdx].classList.add('correct');
+            feedback.innerText = `❌ 아쉬워요! 정답은 '${quizData[currentIdx].a[correctIdx]}'입니다.`;
+            feedback.style.color = "var(--wrong-color)";
+        }
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('score-text').innerText = (score * 10) + "점";
+        
+        let msg = "";
+        if(score >= 9) msg = "당신은 완벽한 소방관 지망생! 👩‍🚒";
+        else if(score >= 7) msg = "와우! 과학 실력이 대단해요! 👍";
+        else msg = "PDF 내용을 조금 더 복습해볼까요? 🌱";
+        document.getElementById('comment-text').innerText = msg;
+    }
+</script>
+
+</body>
+</html>
